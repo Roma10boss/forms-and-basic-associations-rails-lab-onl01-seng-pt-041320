@@ -1,52 +1,35 @@
-class SongsController < ApplicationController
-  def index
-    @songs = Song.all
+class Song < ActiveRecord::Base
+  belongs_to :artist
+  belongs_to :genre
+  has_many :notes
+
+  def artist_name
+    self.artist.name if self.artist
   end
 
-  def show
-    @song = Song.find(params[:id])
+  def artist_name=(name)
+    self.artist = Artist.find_or_create_by(name: name)
+    self.save
   end
 
-  def new
-    @song = Song.new
+  def genre_name
+    self.genre.name if self.genre
   end
 
-  def create
-    @song = Song.new(song_params)
+  def genre_name=(name)
+    self.genre = Genre.find_or_create_by(name: name)
+  end
 
-    if @song.save
-      redirect_to @song
-    else
-      render :new
+  def note_contents
+    self.notes.collect(&:content)
+  end
+
+  def note_contents=(note_contents)
+    note_contents.each do |content|
+      unless content.empty?
+        self.notes << Note.create(content: content)
+        self.save
+      end
     end
-  end
-
-  def edit
-    @song = Song.find(params[:id])
-  end
-
-  def update
-    @song = Song.find(params[:id])
-
-    @song.update(song_params)
-
-    if @song.save
-      redirect_to @song
-    else
-      render :edit
-    end
-  end
-
-  def destroy
-    @song = Song.find(params[:id])
-    @song.destroy
-    flash[:notice] = "Song deleted."
-    redirect_to songs_path
-  end
-
-  private
-
-  def song_params
-    params.require(:song).permit(:title, :artist_name, :genre_id, note_contents: [])
   end
 end
